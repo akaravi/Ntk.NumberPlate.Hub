@@ -1,0 +1,174 @@
+/* تنظیمات کلی */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f7fa;
+  direction: rtl;
+  text-align: right;
+}
+
+/* رنگ‌های اصلی */
+:root {
+  --primary-color: #0078d4;
+  --secondary-color: #107c10;
+  --danger-color: #d13438;
+  --warning-color: #ffb900;
+  --bg-color: #f5f7fa;
+  --card-bg: #ffffff;
+  --text-color: #323130;
+  --border-color: #e1e1e1;
+}
+
+/* کارت‌ها */
+.card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+/* دکمه‌ها */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #106ebe;
+}
+
+.btn-success {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+/* جدول */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: #f3f2f1;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+/* بج‌ها */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: #dff6dd;
+  color: var(--secondary-color);
+}
+
+.badge-danger {
+  background: #fde7e9;
+  color: var(--danger-color);
+}
+
+.badge-warning {
+  background: #fff4ce;
+  color: #8a6d3b;
+}
+
+.badge-info {
+  background: #e7f3ff;
+  color: var(--primary-color);
+}
+
+/* آیکون‌ها */
+.icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* لودینگ */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    padding: 15px;
+  }
+
+  .table {
+    font-size: 14px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px;
+  }
+}
+
+
