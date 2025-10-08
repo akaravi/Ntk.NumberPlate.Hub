@@ -94,7 +94,7 @@
 #### 1. Clone کردن پروژه
 
 ```bash
-git clone https://github.com/yourusername/Ntk.NumberPlate.Hub.git
+git clone https://github.com/akaravi/Ntk.NumberPlate.Hub.git
 cd Ntk.NumberPlate.Hub
 ```
 
@@ -295,9 +295,12 @@ model.export(format='onnx', opset=12, imgsz=640)
 
 این پروژه تحت لایسنس MIT منتشر شده است.
 
-## 👥 نویسندگان
+## 👨‍💻 توسعه‌دهنده
 
-- توسعه اولیه: تیم توسعه Ntk
+**Alireza Karavi**
+- Senior Software Developer
+- Expertise: .NET, C#, Python, Computer Vision, AI/ML
+- GitHub: [@akaravi](https://github.com/akaravi)
 
 ## 🙏 تشکر
 
@@ -309,8 +312,8 @@ model.export(format='onnx', opset=12, imgsz=640)
 
 برای سوالات و پشتیبانی:
 
-- ایمیل: support@example.com
-- Issue Tracker: [GitHub Issues](https://github.com/yourusername/Ntk.NumberPlate.Hub/issues)
+- GitHub Issues: [Issues](https://github.com/akaravi/Ntk.NumberPlate.Hub/issues)
+- Email: support@ntk.ir
 
 ---
 
