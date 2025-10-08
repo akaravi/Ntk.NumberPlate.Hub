@@ -24,6 +24,10 @@ public partial class MainForm : Form
     private CheckBox chkSaveImages;
     private TextBox txtImagePath;
     private CheckBox chkAutoSend;
+    private ComboBox cmbOcrMethod;
+    private TextBox txtYoloOcrModelPath;
+    private Button btnBrowseOcrModel;
+    private NumericUpDown numOcrConfidence;
     private Button btnSave;
     private Button btnTest;
     private Button btnStartService;
@@ -42,7 +46,7 @@ public partial class MainForm : Form
     private void InitializeComponents()
     {
         this.Text = "پیکربندی نود تشخیص پلاک";
-        this.Size = new Size(700, 850);
+        this.Size = new Size(700, 1000);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.RightToLeft = RightToLeft.Yes;
         this.RightToLeftLayout = true;
@@ -134,6 +138,99 @@ public partial class MainForm : Form
         chkAutoSend = AddCheckBox("ارسال خودکار به Hub", controlX, y);
         y += 45;
 
+        // ========== بخش تنظیمات OCR ==========
+        var groupOcr = new GroupBox
+        {
+            Text = "تنظیمات OCR (تشخیص نوشته پلاک)",
+            Location = new Point(20, y),
+            Size = new Size(620, 170),
+            Font = new Font("Tahoma", 9, FontStyle.Bold)
+        };
+        this.Controls.Add(groupOcr);
+        // مختصات داخلی کنترل‌های گروه OCR
+        var gy = 25;
+
+        // OCR Method
+        var lblOcrMethod = new Label
+        {
+            Text = "روش تشخیص OCR:",
+            Location = new Point(420, gy),
+            Size = new Size(180, 20),
+            Font = new Font("Tahoma", 9)
+        };
+        groupOcr.Controls.Add(lblOcrMethod);
+
+        cmbOcrMethod = new ComboBox
+        {
+            Location = new Point(200, gy),
+            Size = new Size(200, 25),
+            Font = new Font("Tahoma", 9),
+            DropDownStyle = ComboBoxStyle.DropDownList
+        };
+        cmbOcrMethod.Items.Add("Simple OCR - روش ساده");
+        cmbOcrMethod.Items.Add("YOLO OCR - روش YOLO");
+        cmbOcrMethod.Items.Add("IronOCR - کتابخانه IronOCR");
+        cmbOcrMethod.SelectedIndex = 0; // مقدار پیش‌فرض: Simple OCR
+        cmbOcrMethod.SelectedIndexChanged += CmbOcrMethod_SelectedIndexChanged;
+        groupOcr.Controls.Add(cmbOcrMethod);
+        gy += 35;
+
+        // YOLO OCR Model Path
+        var lblOcrModel = new Label
+        {
+            Text = "مسیر مدل YOLO OCR:",
+            Location = new Point(420, gy),
+            Size = new Size(180, 20),
+            Font = new Font("Tahoma", 9)
+        };
+        groupOcr.Controls.Add(lblOcrModel);
+
+        txtYoloOcrModelPath = new TextBox
+        {
+            Location = new Point(50, gy),
+            Size = new Size(150, 25),
+            Font = new Font("Tahoma", 9),
+            Text = "models/plate-ocr.onnx" // مقدار پیش‌فرض
+        };
+        groupOcr.Controls.Add(txtYoloOcrModelPath);
+
+        btnBrowseOcrModel = new Button
+        {
+            Text = "...",
+            Location = new Point(210, gy - 2),
+            Size = new Size(50, 25),
+            Font = new Font("Tahoma", 9)
+        };
+        btnBrowseOcrModel.Click += BtnBrowseOcrModel_Click;
+        groupOcr.Controls.Add(btnBrowseOcrModel);
+        gy += 35;
+
+        // OCR Confidence Threshold
+        var lblOcrConf = new Label
+        {
+            Text = "آستانه اعتماد OCR:",
+            Location = new Point(420, gy),
+            Size = new Size(180, 20),
+            Font = new Font("Tahoma", 9)
+        };
+        groupOcr.Controls.Add(lblOcrConf);
+
+        numOcrConfidence = new NumericUpDown
+        {
+            Location = new Point(200, gy),
+            Size = new Size(200, 25),
+            Font = new Font("Tahoma", 9),
+            DecimalPlaces = 2,
+            Increment = 0.05M,
+            Minimum = 0,
+            Maximum = 1,
+            Value = 0.5M
+        };
+        groupOcr.Controls.Add(numOcrConfidence);
+        // ارتفاع گروه OCR را به انتهای بخش بعدی اضافه کن
+        y += groupOcr.Height + 15;
+        // ========================================
+
         // Buttons
         btnSave = AddButton("ذخیره تنظیمات", 520, y, 120, 35);
         btnSave.BackColor = Color.FromArgb(0, 120, 215);
@@ -166,6 +263,9 @@ public partial class MainForm : Form
             Font = new Font("Tahoma", 9)
         };
         this.Controls.Add(txtLog);
+
+        // مقداردهی اولیه کنترل‌های OCR
+        UpdateOcrControls();
     }
 
     private Label AddLabel(string text, int x, int y, int width)
@@ -262,6 +362,12 @@ public partial class MainForm : Form
             chkSaveImages.Checked = _config.SaveImagesLocally;
             txtImagePath.Text = _config.LocalImagePath;
             chkAutoSend.Checked = _config.AutoSendEnabled;
+
+            // Load OCR settings
+            cmbOcrMethod.SelectedIndex = (int)_config.OcrMethod;
+            txtYoloOcrModelPath.Text = _config.YoloOcrModelPath;
+            numOcrConfidence.Value = (decimal)_config.OcrConfidenceThreshold;
+            UpdateOcrControls();
         }
         catch (Exception ex)
         {
@@ -288,6 +394,11 @@ public partial class MainForm : Form
             _config.SaveImagesLocally = chkSaveImages.Checked;
             _config.LocalImagePath = txtImagePath.Text.Trim();
             _config.AutoSendEnabled = chkAutoSend.Checked;
+
+            // Save OCR settings
+            _config.OcrMethod = (OcrMethod)cmbOcrMethod.SelectedIndex;
+            _config.YoloOcrModelPath = txtYoloOcrModelPath.Text.Trim();
+            _config.OcrConfidenceThreshold = (float)numOcrConfidence.Value;
 
             // Validate
             if (string.IsNullOrWhiteSpace(_config.NodeName))
@@ -411,6 +522,56 @@ public partial class MainForm : Form
         if (dialog.ShowDialog() == DialogResult.OK)
         {
             txtImagePath.Text = dialog.SelectedPath;
+        }
+    }
+
+    private void BtnBrowseOcrModel_Click(object? sender, EventArgs e)
+    {
+        using var dialog = new OpenFileDialog
+        {
+            Filter = "ONNX Model Files (*.onnx)|*.onnx|All Files (*.*)|*.*",
+            Title = "انتخاب فایل مدل YOLO OCR"
+        };
+
+        if (dialog.ShowDialog() == DialogResult.OK)
+        {
+            txtYoloOcrModelPath.Text = dialog.FileName;
+        }
+    }
+
+    private void CmbOcrMethod_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        UpdateOcrControls();
+    }
+
+    private void UpdateOcrControls()
+    {
+        // بررسی null برای جلوگیری از خطا در هنگام مقداردهی اولیه
+        if (cmbOcrMethod == null || txtYoloOcrModelPath == null || btnBrowseOcrModel == null)
+            return;
+
+        // فعال/غیرفعال کردن کنترل‌های مربوط به YOLO OCR
+        bool isYoloOcr = cmbOcrMethod.SelectedIndex == 1; // YOLO OCR
+
+        txtYoloOcrModelPath.Enabled = isYoloOcr;
+        btnBrowseOcrModel.Enabled = isYoloOcr;
+
+        if (txtLog == null)
+            return;
+
+        if (isYoloOcr)
+        {
+            Log("✅ روش YOLO OCR انتخاب شد - لطفاً مسیر مدل را مشخص کنید.");
+            Log("💡 برای انتخاب مدل، روی دکمه '...' کلیک کنید");
+        }
+        else if (cmbOcrMethod.SelectedIndex == 0)
+        {
+            Log("روش Simple OCR انتخاب شد - بدون نیاز به مدل خارجی.");
+        }
+        else if (cmbOcrMethod.SelectedIndex == 2)
+        {
+            Log("روش IronOCR انتخاب شد - نیاز به نصب پکیج IronOcr دارد.");
+            Log("💡 برای استفاده از مدل YOLO، ابتدا روش OCR را روی 'YOLO OCR' تغییر دهید");
         }
     }
 

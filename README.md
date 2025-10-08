@@ -298,6 +298,7 @@ model.export(format='onnx', opset=12, imgsz=640)
 ## 👨‍💻 توسعه‌دهنده
 
 **Alireza Karavi**
+
 - Senior Software Developer
 - Expertise: .NET, C#, Python, Computer Vision, AI/ML
 - GitHub: [@akaravi](https://github.com/akaravi)

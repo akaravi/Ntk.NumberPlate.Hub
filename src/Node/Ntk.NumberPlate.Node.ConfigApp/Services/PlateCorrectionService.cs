@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using Ntk.NumberPlate.Shared.Models;
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
 
 namespace Ntk.NumberPlate.Node.ConfigApp.Services
 {
@@ -12,6 +13,59 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Services
     /// </summary>
     public class PlateCorrectionService
     {
+        /// <summary>
+        /// اصلاح تصویر پلاک (Bitmap ورودی)
+        /// </summary>
+        /// <param name="plateImage">تصویر پلاک</param>
+        /// <returns>تصویر اصلاح شده یا null در صورت خطا</returns>
+        public Bitmap? CorrectPlate(Bitmap plateImage)
+        {
+            try
+            {
+                // تبدیل Bitmap به Mat
+                using var mat = BitmapConverter.ToMat(plateImage);
+
+                // تبدیل به خاکستری
+                using var grayPlate = new Mat();
+                Cv2.CvtColor(mat, grayPlate, ColorConversionCodes.BGR2GRAY);
+
+                // تشخیص خطوط
+                var lines = FindLongestLine(grayPlate);
+                if (lines == null || lines.Length == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("هیچ خطی یافت نشد - بازگشت تصویر اصلی");
+                    return plateImage;
+                }
+
+                // محاسبه زاویه چرخش
+                var longestLine = lines[lines.Length - 1];
+                var rotationAngle = FindLineAngle(longestLine);
+
+                System.Diagnostics.Debug.WriteLine($"تعداد خطوط: {lines.Length}, زاویه محاسبه شده: {rotationAngle:F2} درجه");
+
+                // اگر زاویه خیلی کم است، نیازی به چرخش نیست
+                if (Math.Abs(rotationAngle) < 1.0)
+                {
+                    System.Diagnostics.Debug.WriteLine("زاویه چرخش ناچیز - بازگشت تصویر اصلی");
+                    return plateImage;
+                }
+
+                // چرخش تصویر
+                var center = new Point2f(mat.Width / 2.0f, mat.Height / 2.0f);
+                using var rotationMatrix = Cv2.GetRotationMatrix2D(center, rotationAngle, 1.0);
+                using var rotatedImage = new Mat();
+                Cv2.WarpAffine(mat, rotatedImage, rotationMatrix, mat.Size());
+
+                // تبدیل به Bitmap و برگرداندن
+                return BitmapConverter.ToBitmap(rotatedImage);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"خطا در اصلاح پلاک: {ex.Message}");
+                return plateImage; // در صورت خطا، تصویر اصلی را برگردان
+            }
+        }
+
         /// <summary>
         /// اصلاح تصویر پلاک با تشخیص خط و چرخش
         /// </summary>
@@ -86,9 +140,9 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Services
                 using var blurred = new Mat();
                 Cv2.GaussianBlur(plateImage, blurred, new OpenCvSharp.Size(3, 3), 0);
 
-                // تشخیص لبه‌ها - کاهش آستانه برای حساسیت بیشتر
+                // تشخیص لبه‌ها - کاهش آستانه برای حساسیت بیشتر و تشخیص دقیق‌تر هاشورها
                 using var edges = new Mat();
-                Cv2.Canny(blurred, edges, 50, 150);
+                Cv2.Canny(blurred, edges, 30, 100);
 
                 // ذخیره تصویر لبه‌ها برای دیباگ
                 var edgePixels = Cv2.CountNonZero(edges);
@@ -228,8 +282,8 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Services
             {
                 var (height, width) = (rotatedImage.Height, rotatedImage.Width);
 
-                // محاسبه ارتفاع هدف (یک چهارم عرض)
-                var targetHeight = width / 4;
+                // محاسبه ارتفاع هدف (یک سوم عرض - افزایش ارتفاع برای حفظ اطلاعات بیشتر)
+                var targetHeight = width / 3;
 
                 // محاسبه برش از بالا و پایین
                 var cropHeight = (height - targetHeight) / 2;
