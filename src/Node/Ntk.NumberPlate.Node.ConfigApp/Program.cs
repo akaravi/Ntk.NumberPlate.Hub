@@ -1,3 +1,4 @@
+using Ntk.NumberPlate.Node.ConfigApp.Forms;
 namespace Ntk.NumberPlate.Node.ConfigApp;
 
 static class Program

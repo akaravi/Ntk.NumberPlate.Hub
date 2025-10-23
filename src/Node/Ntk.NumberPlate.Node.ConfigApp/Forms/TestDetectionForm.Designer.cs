@@ -1,4 +1,4 @@
-namespace Ntk.NumberPlate.Node.ConfigApp;
+namespace Ntk.NumberPlate.Node.ConfigApp.Forms;
 
 partial class TestDetectionForm
 {

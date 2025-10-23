@@ -8,7 +8,7 @@ using Ntk.NumberPlate.Node.ConfigApp.Services;
 using Ntk.NumberPlate.Shared.Models;
 using OpenCvSharp;
 
-namespace Ntk.NumberPlate.Node.ConfigApp
+namespace Ntk.NumberPlate.Node.ConfigApp.Forms
 {
     /// <summary>
     /// کلاس تحلیل متن پلاک
@@ -39,6 +39,8 @@ namespace Ntk.NumberPlate.Node.ConfigApp
         private readonly Button _btnLoadImage;
         private readonly Button _btnDetect;
         private readonly Button _btnOcr;
+        private readonly Button _btnOcrOriginal;
+        private readonly Button _btnOcrFullImage;
         private readonly Button _btnCorrectPlate;
         private readonly Label _lblStatus;
         private readonly Label _lblOcr;
@@ -59,7 +61,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             _config = config;
 
             Text = "تست تشخیص پلاک (ساده)";
-            Size = new System.Drawing.Size(1100, 650);
+            Size = new System.Drawing.Size(1100, 750);
             StartPosition = FormStartPosition.CenterScreen;
             RightToLeft = RightToLeft.Yes;
             RightToLeftLayout = true;
@@ -68,7 +70,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             {
                 Text = "تصویر",
                 Location = new System.Drawing.Point(220, 20),
-                Size = new System.Drawing.Size(840, 520),
+                Size = new System.Drawing.Size(840, 620),
                 Font = new Font("Tahoma", 9, FontStyle.Bold)
             };
             Controls.Add(_grpImage);
@@ -77,7 +79,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             {
                 Text = "لیست پلاک‌ها",
                 Location = new System.Drawing.Point(20, 20),
-                Size = new System.Drawing.Size(190, 520),
+                Size = new System.Drawing.Size(190, 620),
                 Font = new Font("Tahoma", 9, FontStyle.Bold)
             };
             Controls.Add(_grpPlates);
@@ -129,12 +131,13 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             };
             _grpImage.Controls.Add(_pictureBox);
 
+            // ردیف اول دکمه‌ها - عملیات اصلی
             _btnLoadImage = new Button
             {
                 Text = "📁 انتخاب تصویر",
-                Location = new System.Drawing.Point(10, 475),
-                Size = new System.Drawing.Size(140, 30),
-                BackColor = Color.FromArgb(0, 120, 215),
+                Location = new System.Drawing.Point(10, 450),
+                Size = new System.Drawing.Size(120, 35),
+                BackColor = Color.FromArgb(52, 152, 219),
                 ForeColor = Color.White,
                 Font = new Font("Tahoma", 9, FontStyle.Bold)
             };
@@ -144,8 +147,8 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             _btnDetect = new Button
             {
                 Text = "🔍 تشخیص پلاک",
-                Location = new System.Drawing.Point(160, 475),
-                Size = new System.Drawing.Size(140, 30),
+                Location = new System.Drawing.Point(140, 450),
+                Size = new System.Drawing.Size(120, 35),
                 BackColor = Color.FromArgb(16, 124, 16),
                 ForeColor = Color.White,
                 Font = new Font("Tahoma", 9, FontStyle.Bold),
@@ -154,24 +157,11 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             _btnDetect.Click += BtnDetect_Click;
             _grpImage.Controls.Add(_btnDetect);
 
-            _btnOcr = new Button
-            {
-                Text = "🔤 شناسایی متن",
-                Location = new System.Drawing.Point(310, 475),
-                Size = new System.Drawing.Size(140, 30),
-                BackColor = Color.FromArgb(142, 68, 173),
-                ForeColor = Color.White,
-                Font = new Font("Tahoma", 9, FontStyle.Bold),
-                Enabled = false
-            };
-            _btnOcr.Click += BtnOcr_Click;
-            _grpImage.Controls.Add(_btnOcr);
-
             _btnCorrectPlate = new Button
             {
                 Text = "🔧 اصلاح پلاک",
-                Location = new System.Drawing.Point(460, 475),
-                Size = new System.Drawing.Size(140, 30),
+                Location = new System.Drawing.Point(270, 450),
+                Size = new System.Drawing.Size(120, 35),
                 BackColor = Color.FromArgb(230, 126, 34),
                 ForeColor = Color.White,
                 Font = new Font("Tahoma", 9, FontStyle.Bold),
@@ -180,10 +170,50 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             _btnCorrectPlate.Click += BtnCorrectPlate_Click;
             _grpImage.Controls.Add(_btnCorrectPlate);
 
+            // ردیف دوم دکمه‌ها - عملیات OCR
+            _btnOcrFullImage = new Button
+            {
+                Text = "🔤 OCR کامل",
+                Location = new System.Drawing.Point(10, 495),
+                Size = new System.Drawing.Size(120, 35),
+                BackColor = Color.FromArgb(46, 204, 113),
+                ForeColor = Color.White,
+                Font = new Font("Tahoma", 9, FontStyle.Bold),
+                Enabled = false
+            };
+            _btnOcrFullImage.Click += BtnOcrFullImage_Click;
+            _grpImage.Controls.Add(_btnOcrFullImage);
+
+            _btnOcrOriginal = new Button
+            {
+                Text = "🔤 OCR برش",
+                Location = new System.Drawing.Point(140, 495),
+                Size = new System.Drawing.Size(120, 35),
+                BackColor = Color.FromArgb(52, 152, 219),
+                ForeColor = Color.White,
+                Font = new Font("Tahoma", 9, FontStyle.Bold),
+                Enabled = false
+            };
+            _btnOcrOriginal.Click += BtnOcrOriginal_Click;
+            _grpImage.Controls.Add(_btnOcrOriginal);
+
+            _btnOcr = new Button
+            {
+                Text = "🔤 OCR اصلاح",
+                Location = new System.Drawing.Point(270, 495),
+                Size = new System.Drawing.Size(120, 35),
+                BackColor = Color.FromArgb(142, 68, 173),
+                ForeColor = Color.White,
+                Font = new Font("Tahoma", 9, FontStyle.Bold),
+                Enabled = false
+            };
+            _btnOcr.Click += BtnOcr_Click;
+            _grpImage.Controls.Add(_btnOcr);
+
             _lblStatus = new Label
             {
                 Text = "آماده",
-                Location = new System.Drawing.Point(220, 555),
+                Location = new System.Drawing.Point(220, 660),
                 Size = new System.Drawing.Size(600, 25),
                 BackColor = Color.LightGray,
                 TextAlign = ContentAlignment.MiddleLeft
@@ -193,7 +223,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
             _lblOcr = new Label
             {
                 Text = "OCR: -",
-                Location = new System.Drawing.Point(840, 555),
+                Location = new System.Drawing.Point(840, 660),
                 Size = new System.Drawing.Size(220, 25),
                 BackColor = Color.LightYellow,
                 ForeColor = Color.DarkBlue,
@@ -272,6 +302,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
                     _lblStatus.Text = $"تصویر بارگذاری شد: {Path.GetFileName(_currentImagePath)}";
                     _lblStatus.BackColor = Color.LightGray;
                     _btnOcr.Enabled = false;
+                    _btnOcrFullImage.Enabled = true; // فعال کردن OCR تصویر کامل
                 }
             }
             catch (Exception ex)
@@ -336,7 +367,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
                 {
                     _lblStatus.Text = $"✓ {_detections.Count} پلاک یافت شد (خودکار ذخیره شد)";
                     _lblStatus.BackColor = Color.LightGreen;
-                    _btnOcr.Enabled = true;
+                    _btnOcrOriginal.Enabled = true; // فعال کردن OCR اصلی
                     _btnCorrectPlate.Enabled = false; // تا زمانی که انتخاب نشده، غیرفعال
 
                     // انتخاب اولین پلاک به صورت پیش‌فرض
@@ -353,6 +384,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
                     _lblStatus.Text = "هیچ پلاکی یافت نشد";
                     _lblStatus.BackColor = Color.LightYellow;
                     _btnOcr.Enabled = false;
+                    _btnOcrOriginal.Enabled = false;
                     _btnCorrectPlate.Enabled = false;
                     _lblSelectedPlate.Text = "انتخاب نشده";
                     _lblSelectedPlate.BackColor = Color.LightGray;
@@ -1107,7 +1139,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
                     var analysis = AnalyzePlateText(plateText);
 
                     // نمایش نتایج
-                    _lblOcr.Text = $"OCR: {plateText} | 🔢{analysis.Numbers} 🔤{analysis.Letters}";
+                    _lblOcr.Text = $"OCR (اصلاح شده): {plateText} | 🔢{analysis.Numbers} 🔤{analysis.Letters}";
                     _lblOcr.BackColor = Color.LightGreen;
 
                     // نمایش جزئیات در لیست سمت راست
@@ -1121,11 +1153,11 @@ namespace Ntk.NumberPlate.Node.ConfigApp
                     DrawOcrBoxesOnCorrectedImage(correctedBitmap, analysis);
 
                     // نمایش پیام موفقیت
-                    _lblStatus.Text = $"✓ OCR موفق - متن: {plateText} | اعتماد: {ocrResult.Confidence:P0}";
+                    _lblStatus.Text = $"✓ OCR (اصلاح شده) موفق - متن: {plateText} | اعتماد: {ocrResult.Confidence:P0}";
                     _lblStatus.BackColor = Color.LightGreen;
 
                     // نمایش جزئیات
-                    var details = $"متن پلاک: {plateText}\n\n" +
+                    var details = $"متن پلاک (اصلاح شده): {plateText}\n\n" +
                                 $"📝 متن کامل: {plateText}\n" +
                                 $"🔢 اعداد: {analysis.Numbers} ({analysis.NumberCount})\n" +
                                 $"🔤 حروف: {analysis.Letters} ({analysis.LetterCount})\n" +
@@ -1134,7 +1166,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp
                                 $"اعتماد: {ocrResult.Confidence:P0}\n" +
                                 $"زمان پردازش: {ocrResult.ProcessingTimeMs}ms";
 
-                    MessageBox.Show(details, "نتیجه OCR", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(details, "نتیجه OCR (اصلاح شده)", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
@@ -1155,6 +1187,217 @@ namespace Ntk.NumberPlate.Node.ConfigApp
                 _lblStatus.Text = "خطا در OCR";
                 _lblStatus.BackColor = Color.LightCoral;
                 _btnOcr.Enabled = true;
+                MessageBox.Show($"خطا در OCR:\n{ex.Message}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"❌ خطا در OCR: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        private async void BtnOcrFullImage_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // بررسی وجود تصویر اصلی
+                if (_originalImage == null || string.IsNullOrEmpty(_currentImagePath))
+                {
+                    MessageBox.Show("ابتدا تصویر را بارگذاری کنید.", "راهنما", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (_ocrService == null)
+                {
+                    MessageBox.Show("سرویس OCR در دسترس نیست.", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // نمایش پیام در حال پردازش
+                _lblStatus.Text = "در حال پردازش OCR روی تصویر کامل اصلی...";
+                _lblStatus.BackColor = Color.LightYellow;
+                _btnOcrFullImage.Enabled = false;
+
+                // تبدیل تصویر اصلی کامل به Bitmap
+                var fullImageBitmap = new Bitmap(_originalImage);
+
+                // انجام OCR روی تصویر کامل
+                var ocrResult = await Task.Run(() => _ocrService.RecognizePlate(fullImageBitmap));
+
+                if (ocrResult.IsSuccessful && !string.IsNullOrEmpty(ocrResult.Text))
+                {
+                    var plateText = ocrResult.Text;
+                    var analysis = AnalyzePlateText(plateText);
+
+                    // نمایش نتایج
+                    _lblOcr.Text = $"OCR (تصویر کامل): {plateText} | 🔢{analysis.Numbers} 🔤{analysis.Letters}";
+                    _lblOcr.BackColor = Color.FromArgb(46, 204, 113); // سبز
+
+                    // رسم کادربندی محتوای شناسایی شده روی تصویر کامل
+                    DrawOcrBoxesOnCorrectedImage(fullImageBitmap, analysis);
+
+                    // نمایش پیام موفقیت
+                    _lblStatus.Text = $"✓ OCR (تصویر کامل) موفق - متن: {plateText} | اعتماد: {ocrResult.Confidence:P0}";
+                    _lblStatus.BackColor = Color.LightGreen;
+
+                    // نمایش جزئیات
+                    var details = $"متن پلاک (تصویر کامل اصلی): {plateText}\n\n" +
+                                $"📝 متن کامل: {plateText}\n" +
+                                $"🔢 اعداد: {analysis.Numbers} ({analysis.NumberCount})\n" +
+                                $"🔤 حروف: {analysis.Letters} ({analysis.LetterCount})\n" +
+                                $"📏 طول: {analysis.Length}\n\n" +
+                                $"روش OCR: {_config.OcrMethod}\n" +
+                                $"اعتماد: {ocrResult.Confidence:P0}\n" +
+                                $"زمان پردازش: {ocrResult.ProcessingTimeMs}ms\n\n" +
+                                $"⚠️ توجه: این نتیجه از تصویر اصلی کامل (بدون برش یا اصلاح) است\n" +
+                                $"🔍 این روش برای تصاویری که فقط یک پلاک دارند مناسب است";
+
+                    MessageBox.Show(details, "نتیجه OCR (تصویر کامل)", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // به‌روزرسانی لیست جزئیات
+                    _lstOcrDetails.Items.Clear();
+                    _lstOcrDetails.Items.Add("جزئیات OCR");
+                    _lstOcrDetails.Items.Add("══════════");
+                    _lstOcrDetails.Items.Add("");
+                    _lstOcrDetails.Items.Add("منبع: تصویر کامل");
+                    _lstOcrDetails.Items.Add("");
+                    _lstOcrDetails.Items.Add($"📝 متن کامل:");
+                    _lstOcrDetails.Items.Add($"   {plateText}");
+                    _lstOcrDetails.Items.Add("");
+                    if (!string.IsNullOrEmpty(analysis.Numbers))
+                    {
+                        _lstOcrDetails.Items.Add($"🔢 اعداد ({analysis.NumberCount}):");
+                        _lstOcrDetails.Items.Add($"   {analysis.Numbers}");
+                        _lstOcrDetails.Items.Add("");
+                    }
+                    if (!string.IsNullOrEmpty(analysis.Letters))
+                    {
+                        _lstOcrDetails.Items.Add($"🔤 حروف ({analysis.LetterCount}):");
+                        _lstOcrDetails.Items.Add($"   {analysis.Letters}");
+                        _lstOcrDetails.Items.Add("");
+                    }
+                    _lstOcrDetails.Items.Add("──────────");
+                    _lstOcrDetails.Items.Add($"📏 طول: {analysis.Length}");
+                    _lstOcrDetails.Items.Add($"✅ اعتماد: {ocrResult.Confidence:P0}");
+                }
+                else
+                {
+                    _lblOcr.Text = $"OCR ناموفق: {ocrResult.ErrorMessage}";
+                    _lblOcr.BackColor = Color.LightCoral;
+                    _lblStatus.Text = "OCR ناموفق";
+                    _lblStatus.BackColor = Color.LightCoral;
+                    MessageBox.Show($"خطا در OCR:\n{ocrResult.ErrorMessage}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                // فعال کردن دکمه OCR برای تلاش مجدد
+                _btnOcrFullImage.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                _lblOcr.Text = "OCR: خطا";
+                _lblOcr.BackColor = Color.LightCoral;
+                _lblStatus.Text = "خطا در OCR";
+                _lblStatus.BackColor = Color.LightCoral;
+                _btnOcrFullImage.Enabled = true;
+                MessageBox.Show($"خطا در OCR:\n{ex.Message}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"❌ خطا در OCR: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        private async void BtnOcrOriginal_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // بررسی وجود پلاک انتخاب شده
+                if (_selectedDetection == null || _selectedDetection.PlateBoundingBox == null)
+                {
+                    MessageBox.Show("ابتدا یک پلاک از لیست انتخاب کنید.", "راهنما", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (_ocrService == null)
+                {
+                    MessageBox.Show("سرویس OCR در دسترس نیست.", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (_originalImage == null)
+                {
+                    MessageBox.Show("تصویر اصلی یافت نشد.", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // نمایش پیام در حال پردازش
+                _lblStatus.Text = "در حال پردازش OCR روی تصویر اصلی...";
+                _lblStatus.BackColor = Color.LightYellow;
+                _btnOcrOriginal.Enabled = false;
+
+                // برش پلاک از تصویر اصلی
+                var bbox = _selectedDetection.PlateBoundingBox;
+                using var srcBitmap = new Bitmap(_originalImage);
+                var rect = new Rectangle(bbox.X, bbox.Y, bbox.Width, bbox.Height);
+                rect.Intersect(new Rectangle(0, 0, srcBitmap.Width, srcBitmap.Height));
+
+                var plateBitmap = new Bitmap(rect.Width, rect.Height);
+                using (var g = Graphics.FromImage(plateBitmap))
+                {
+                    g.DrawImage(srcBitmap, new Rectangle(0, 0, rect.Width, rect.Height), rect, GraphicsUnit.Pixel);
+                }
+
+                // انجام OCR روی تصویر اصلی (برش خورده)
+                var ocrResult = await Task.Run(() => _ocrService.RecognizePlate(plateBitmap));
+
+                if (ocrResult.IsSuccessful && !string.IsNullOrEmpty(ocrResult.Text))
+                {
+                    var plateText = ocrResult.Text;
+                    var analysis = AnalyzePlateText(plateText);
+
+                    // نمایش نتایج
+                    _lblOcr.Text = $"OCR (اصلی): {plateText} | 🔢{analysis.Numbers} 🔤{analysis.Letters}";
+                    _lblOcr.BackColor = Color.FromArgb(52, 152, 219); // آبی روشن
+
+                    // نمایش جزئیات در لیست سمت راست
+                    if (_selectedDetection != null)
+                    {
+                        _selectedDetection.PlateNumber = plateText;
+                        UpdateOcrDetails(_selectedDetection);
+                    }
+
+                    // رسم کادربندی محتوای شناسایی شده روی تصویر برش خورده
+                    DrawOcrBoxesOnCorrectedImage(plateBitmap, analysis);
+
+                    // نمایش پیام موفقیت
+                    _lblStatus.Text = $"✓ OCR (اصلی) موفق - متن: {plateText} | اعتماد: {ocrResult.Confidence:P0}";
+                    _lblStatus.BackColor = Color.LightGreen;
+
+                    // نمایش جزئیات
+                    var details = $"متن پلاک (تصویر اصلی): {plateText}\n\n" +
+                                $"📝 متن کامل: {plateText}\n" +
+                                $"🔢 اعداد: {analysis.Numbers} ({analysis.NumberCount})\n" +
+                                $"🔤 حروف: {analysis.Letters} ({analysis.LetterCount})\n" +
+                                $"📏 طول: {analysis.Length}\n\n" +
+                                $"روش OCR: {_config.OcrMethod}\n" +
+                                $"اعتماد: {ocrResult.Confidence:P0}\n" +
+                                $"زمان پردازش: {ocrResult.ProcessingTimeMs}ms\n\n" +
+                                $"⚠️ توجه: این نتیجه از تصویر اصلی (برش خورده) است";
+
+                    MessageBox.Show(details, "نتیجه OCR (تصویر اصلی)", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    _lblOcr.Text = $"OCR ناموفق: {ocrResult.ErrorMessage}";
+                    _lblOcr.BackColor = Color.LightCoral;
+                    _lblStatus.Text = "OCR ناموفق";
+                    _lblStatus.BackColor = Color.LightCoral;
+                    MessageBox.Show($"خطا در OCR:\n{ocrResult.ErrorMessage}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                // فعال کردن دکمه OCR برای تلاش مجدد
+                _btnOcrOriginal.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                _lblOcr.Text = "OCR: خطا";
+                _lblOcr.BackColor = Color.LightCoral;
+                _lblStatus.Text = "خطا در OCR";
+                _lblStatus.BackColor = Color.LightCoral;
+                _btnOcrOriginal.Enabled = true;
                 MessageBox.Show($"خطا در OCR:\n{ex.Message}", "خطا", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 System.Diagnostics.Debug.WriteLine($"❌ خطا در OCR: {ex.Message}\n{ex.StackTrace}");
             }

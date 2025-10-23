@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Newtonsoft.Json;
 using Ntk.NumberPlate.Shared.Models;
 
-namespace Ntk.NumberPlate.Node.ConfigApp;
+namespace Ntk.NumberPlate.Node.ConfigApp.Forms;
 
 public partial class MainForm : Form
 {
