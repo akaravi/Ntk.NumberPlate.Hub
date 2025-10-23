@@ -239,14 +239,14 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(_config.YoloModelPath))
+                if (string.IsNullOrWhiteSpace(_config.YoloPlateModelPath))
                 {
-                    _lblStatus.Text = "خطا: مسیر مدل YOLO خالی است";
+                    _lblStatus.Text = "خطا: مسیر مدل YOLO تشخیص پلاک خالی است";
                     _lblStatus.BackColor = Color.LightCoral;
                     return;
                 }
 
-                _detectionService = new PlateDetectionTestService(_config.YoloModelPath, _config.ConfidenceThreshold);
+                _detectionService = new PlateDetectionTestService(_config.YoloPlateModelPath, _config.ConfidenceThreshold);
                 if (_detectionService.Initialize(out string errorMessage))
                 {
                     _lblStatus.Text = "✓ مدل YOLO بارگذاری شد";

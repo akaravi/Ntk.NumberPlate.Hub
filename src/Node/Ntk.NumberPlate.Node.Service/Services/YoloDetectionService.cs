@@ -30,12 +30,12 @@ public class YoloDetectionService : IDisposable
 
         try
         {
-            // بارگذاری مدل YOLO
-            if (File.Exists(config.YoloModelPath))
+            // بارگذاری مدل YOLO تشخیص پلاک
+            if (File.Exists(config.YoloPlateModelPath))
             {
                 var sessionOptions = new SessionOptions();
                 try { sessionOptions.RegisterOrtExtensions(); } catch { }
-                _session = new InferenceSession(config.YoloModelPath, sessionOptions);
+                _session = new InferenceSession(config.YoloPlateModelPath, sessionOptions);
 
                 // کشف نام ورودی و اندازه ورودی از مدل
                 var inputMeta = _session.InputMetadata.FirstOrDefault();
@@ -50,11 +50,11 @@ public class YoloDetectionService : IDisposable
                     if (dims[2] > 0) _inputHeight = dims[2];
                     if (dims[3] > 0) _inputWidth = dims[3];
                 }
-                _logger.LogInformation($"مدل YOLO بارگذاری شد: {config.YoloModelPath}");
+                _logger.LogInformation($"مدل YOLO تشخیص پلاک بارگذاری شد: {config.YoloPlateModelPath}");
             }
             else
             {
-                _logger.LogWarning($"فایل مدل YOLO یافت نشد: {config.YoloModelPath}");
+                _logger.LogWarning($"فایل مدل YOLO تشخیص پلاک یافت نشد: {config.YoloPlateModelPath}");
             }
 
             // راه‌اندازی دوربین

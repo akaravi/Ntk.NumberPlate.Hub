@@ -14,7 +14,7 @@ public partial class MainForm : Form
     private TextBox txtNodeName;
     private TextBox txtHubUrl;
     private TextBox txtApiToken;
-    private TextBox txtYoloModelPath;
+    private TextBox txtYoloPlateModelPath;
     private NumericUpDown numConfidence;
     private TextBox txtVideoSource;
     private NumericUpDown numProcessingFps;
@@ -32,6 +32,7 @@ public partial class MainForm : Form
     private Button btnTest;
     private Button btnStartService;
     private Button btnTestDetection;
+    private Button btnTestDetection2;
     private Button btnBrowseModel;
     private Button btnBrowseImagePath;
     private TextBox txtLog;
@@ -76,9 +77,9 @@ public partial class MainForm : Form
         txtApiToken = AddTextBox(controlX, y, controlWidth);
         y += 35;
 
-        // YOLO Model Path
-        AddLabel("مسیر مدل YOLO:", 20, y, labelWidth);
-        txtYoloModelPath = AddTextBox(controlX, y, 300);
+        // YOLO Plate Model Path
+        AddLabel("مسیر مدل YOLO تشخیص پلاک:", 20, y, labelWidth);
+        txtYoloPlateModelPath = AddTextBox(controlX, y, 300);
         btnBrowseModel = AddButton("...", controlX + 310, y - 2, 50, 25);
         btnBrowseModel.Click += BtnBrowseModel_Click;
         y += 35;
@@ -249,6 +250,11 @@ public partial class MainForm : Form
         btnTestDetection.BackColor = Color.FromArgb(156, 39, 176);
         btnTestDetection.ForeColor = Color.White;
         btnTestDetection.Click += BtnTestDetection_Click;
+
+        btnTestDetection2 = AddButton("تست تشخیص پلاک ۲", 10, y, 120, 35);
+        btnTestDetection2.BackColor = Color.FromArgb(255, 87, 34);
+        btnTestDetection2.ForeColor = Color.White;
+        btnTestDetection2.Click += BtnTestDetection2_Click;
         y += 50;
 
         // Log TextBox
@@ -352,7 +358,7 @@ public partial class MainForm : Form
             txtNodeName.Text = _config.NodeName;
             txtHubUrl.Text = _config.HubServerUrl;
             txtApiToken.Text = _config.ApiToken ?? "";
-            txtYoloModelPath.Text = _config.YoloModelPath;
+            txtYoloPlateModelPath.Text = _config.YoloPlateModelPath;
             numConfidence.Value = (decimal)_config.ConfidenceThreshold;
             txtVideoSource.Text = _config.VideoSource;
             numProcessingFps.Value = _config.ProcessingFps;
@@ -384,7 +390,7 @@ public partial class MainForm : Form
             _config.NodeName = txtNodeName.Text.Trim();
             _config.HubServerUrl = txtHubUrl.Text.Trim();
             _config.ApiToken = txtApiToken.Text.Trim();
-            _config.YoloModelPath = txtYoloModelPath.Text.Trim();
+            _config.YoloPlateModelPath = txtYoloPlateModelPath.Text.Trim();
             _config.ConfidenceThreshold = (float)numConfidence.Value;
             _config.VideoSource = txtVideoSource.Text.Trim();
             _config.ProcessingFps = (int)numProcessingFps.Value;
@@ -508,7 +514,7 @@ public partial class MainForm : Form
 
         if (dialog.ShowDialog() == DialogResult.OK)
         {
-            txtYoloModelPath.Text = dialog.FileName;
+            txtYoloPlateModelPath.Text = dialog.FileName;
         }
     }
 
@@ -580,7 +586,7 @@ public partial class MainForm : Form
         try
         {
             // بررسی مدل YOLO
-            if (string.IsNullOrWhiteSpace(_config.YoloModelPath) || !File.Exists(_config.YoloModelPath))
+            if (string.IsNullOrWhiteSpace(_config.YoloPlateModelPath) || !File.Exists(_config.YoloPlateModelPath))
             {
                 var result = MessageBox.Show(
                     "مسیر مدل YOLO معتبر نیست.\n\nآیا می‌خواهید تنظیمات را ویرایش کنید؟",
@@ -604,6 +610,26 @@ public partial class MainForm : Form
         {
             Log($"خطا در باز کردن فرم تست: {ex.Message}");
             MessageBox.Show($"خطا در باز کردن فرم تست:\n{ex.Message}", "خطا",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void BtnTestDetection2_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            Log("دکمه 'تست تشخیص پلاک ۲' کلیک شد.");
+            
+            // باز کردن فرم تست جدید
+            var testFormB = new TestDetectionModelBForm(_config);
+            testFormB.ShowDialog();
+
+            Log("فرم تست تشخیص مدل B باز شد.");
+        }
+        catch (Exception ex)
+        {
+            Log($"خطا در باز کردن فرم تست مدل B: {ex.Message}");
+            MessageBox.Show($"خطا در باز کردن فرم تست مدل B:\n{ex.Message}", "خطا",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
