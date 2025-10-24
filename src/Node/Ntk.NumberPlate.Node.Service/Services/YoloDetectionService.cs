@@ -147,7 +147,7 @@ public class YoloDetectionService : IDisposable
             var outputTensor = first.AsTensor<float>();
 
             // پس‌پردازش خروجی YOLO
-            detections = PostProcessResults(outputTensor, frame.Width, frame.Height, ratio, padW, padH);
+            detections = PostProcessResults(outputTensor as DenseTensor<float>, frame.Width, frame.Height, ratio, padW, padH);
 
             // فیلتر بر اساس آستانه اعتماد
             detections = detections.Where(d => d.Confidence >= _config.ConfidenceThreshold).ToList();
@@ -198,7 +198,7 @@ public class YoloDetectionService : IDisposable
         return (tensor, r, padW, padH);
     }
 
-    private List<VehicleDetectionData> PostProcessResults(System.Numerics.Tensors.DenseTensor<float> output, int originalWidth, int originalHeight, float resizeRatio, int padW, int padH)
+    private List<VehicleDetectionData> PostProcessResults(Microsoft.ML.OnnxRuntime.Tensors.DenseTensor<float> output, int originalWidth, int originalHeight, float resizeRatio, int padW, int padH)
     {
         var detections = new List<VehicleDetectionData>();
 
@@ -230,7 +230,7 @@ public class YoloDetectionService : IDisposable
             else
             {
                 // fallback: بردار تخت
-                int flat = output.Length;
+                int flat = (int)output.Length;
                 // فرض attrs 84 یا 85
                 numAttrs = 85;
                 numAnchors = flat / numAttrs;

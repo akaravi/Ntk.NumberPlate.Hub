@@ -601,7 +601,7 @@ public partial class MainForm : Form
             }
 
             // باز کردن فرم تست
-            var testForm = new TestDetectionForm(_config);
+            var testForm = new TestDetectionModelBForm(_config);
             testForm.ShowDialog();
 
             Log("فرم تست تشخیص باز شد.");

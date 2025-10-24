@@ -1,14 +1,11 @@
-using Ntk.NumberPlate.Hub.Api.Models;
 using Ntk.NumberPlate.Shared.Models;
 
-namespace Ntk.NumberPlate.Hub.Api.Services;
+namespace Ntk.NumberPlate.Shared.Services;
 
 public interface INodeManagementService
 {
     Task RegisterNodeAsync(string nodeId, string nodeName, string? ipAddress);
     Task UpdateHeartbeatAsync(string nodeId);
-    Task<List<Shared.Models.NodeInfo>> GetAllNodesAsync();
-    Task<Shared.Models.NodeInfo?> GetNodeAsync(string nodeId);
+    Task<List<NodeInfo>> GetAllNodesAsync();
+    Task<NodeInfo?> GetNodeAsync(string nodeId);
 }
-
-

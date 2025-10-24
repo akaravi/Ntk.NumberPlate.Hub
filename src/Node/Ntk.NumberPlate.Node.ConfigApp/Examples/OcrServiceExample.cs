@@ -1,6 +1,6 @@
 using System;
 using System.Drawing;
-using Ntk.NumberPlate.Node.ConfigApp.Services;
+using Ntk.NumberPlate.Shared.Services;
 using Ntk.NumberPlate.Shared.Models;
 
 namespace Ntk.NumberPlate.Node.ConfigApp.Examples
@@ -20,11 +20,11 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
             // تنظیمات
             var config = new NodeConfiguration
             {
-                OcrMethod = OcrMethod.Simple
+                OcrMethod = OcrMethod.Yolo
             };
 
             // ایجاد سرویس
-            using var ocrService = new PlateOcrService(config);
+            using var ocrService = new PlateDetectionOCRService(config);
 
             // فرض کنیم تصویر پلاک را داریم
             // var plateImage = new Bitmap("plate.jpg");
@@ -61,7 +61,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
             };
 
             // ایجاد سرویس
-            using var ocrService = new PlateOcrService(config);
+            using var ocrService = new PlateDetectionOCRService(config);
 
             // استفاده مشابه مثال قبل
             Console.WriteLine("✅ سرویس YOLO OCR آماده است");
@@ -77,11 +77,11 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
             // تنظیمات
             var config = new NodeConfiguration
             {
-                OcrMethod = OcrMethod.IronOcr
+                OcrMethod = OcrMethod.Yolo
             };
 
             // ایجاد سرویس
-            using var ocrService = new PlateOcrService(config);
+            using var ocrService = new PlateDetectionOCRService(config);
 
             // استفاده مشابه مثال‌های قبل
             Console.WriteLine("✅ سرویس IronOCR آماده است");
@@ -97,8 +97,8 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
             var config = new NodeConfiguration();
 
             // تست با روش ساده
-            config.OcrMethod = OcrMethod.Simple;
-            using (var ocrService1 = new PlateOcrService(config))
+            config.OcrMethod = OcrMethod.Yolo;
+            using (var ocrService1 = new PlateDetectionOCRService(config))
             {
                 Console.WriteLine("🔧 استفاده از روش ساده");
                 // var result1 = ocrService1.RecognizePlate(plateImage);
@@ -107,7 +107,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
             // تست با روش YOLO
             config.OcrMethod = OcrMethod.Yolo;
             config.YoloOcrModelPath = "models/plate-ocr.onnx";
-            using (var ocrService2 = new PlateOcrService(config))
+            using (var ocrService2 = new PlateDetectionOCRService(config))
             {
                 Console.WriteLine("🔧 استفاده از روش YOLO");
                 // var result2 = ocrService2.RecognizePlate(plateImage);
@@ -132,7 +132,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
             };
 
             var correctionService = new PlateCorrectionService();
-            using var ocrService = new PlateOcrService(config);
+            using var ocrService = new PlateDetectionOCRService(config);
 
             // فرض: تصویر کامل و مختصات پلاک
             // string imagePath = "full-image.jpg";
@@ -162,10 +162,10 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
 
             var config = new NodeConfiguration
             {
-                OcrMethod = OcrMethod.Simple
+                OcrMethod = OcrMethod.Yolo
             };
 
-            using var ocrService = new PlateOcrService(config);
+            using var ocrService = new PlateDetectionOCRService(config);
 
             // فرض: لیست تصاویر پلاک
             // var plateImages = new List<Bitmap>
@@ -216,7 +216,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
                     YoloOcrModelPath = "models/non-existent.onnx" // فایل وجود ندارد
                 };
 
-                using var ocrService = new PlateOcrService(config);
+                using var ocrService = new PlateDetectionOCRService(config);
 
                 // سرویس به صورت خودکار به روش ساده Fallback می‌کند
                 Console.WriteLine("✅ سرویس با روش جایگزین ایجاد شد");
@@ -236,10 +236,10 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Examples
 
             var config = new NodeConfiguration
             {
-                OcrMethod = OcrMethod.Simple
+                OcrMethod = OcrMethod.Yolo
             };
 
-            using var ocrService = new PlateOcrService(config);
+            using var ocrService = new PlateDetectionOCRService(config);
 
             // کار مستقیم با Mat
             // using var image = Cv2.ImRead("plate.jpg");

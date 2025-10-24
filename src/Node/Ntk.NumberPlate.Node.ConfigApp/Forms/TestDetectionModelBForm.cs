@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Ntk.NumberPlate.Shared.Models;
-using Ntk.NumberPlate.Node.ConfigApp.Services;
+using Ntk.NumberPlate.Shared.Services;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using System.IO;
@@ -13,8 +13,8 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
     public partial class TestDetectionModelBForm : Form
     {
         private readonly NodeConfiguration _config;
-        private PlateDetectionTestService? _detectionService;
-        private PlateOcrService? _ocrService;
+        private PlateDetectionPlaceService? _detectionPlaceService;
+        private PlateDetectionOCRService? _detectionOCRService;
         
         // Workflow variables
         private string? _originalImagePath;
@@ -88,19 +88,19 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 }
 
                 // مقداردهی سرویس تشخیص پلاک با تنظیمات کامل
-                _detectionService = new PlateDetectionTestService(_config.YoloPlateModelPath, _config.ConfidenceThreshold);
+                _detectionPlaceService = new PlateDetectionPlaceService(_config.YoloPlateModelPath, _config.ConfidenceThreshold);
                 
                 // بررسی و مقداردهی مدل تشخیص
-                if (!_detectionService.Initialize(out string initError))
+                if (!_detectionPlaceService.Initialize(out string initError))
                 {
                     MessageBox.Show($"خطا در مقداردهی مدل تشخیص پلاک:\n{initError}", "خطا", 
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _detectionService = null;
+                    _detectionPlaceService = null;
                     return;
                 }
                 
                 // مقداردهی سرویس OCR با تنظیمات کامل
-                _ocrService = new PlateOcrService(_config);
+                _detectionOCRService = new PlateDetectionOCRService(_config);
 
                 // تست سرویس تشخیص
                 TestDetectionService();
@@ -489,7 +489,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 _lblStatus.Text = "در حال تشخیص پلاک...";
                 _lblStatus.ForeColor = Color.Orange;
                 
-                if (_preprocessedImage == null || _detectionService == null)
+                if (_preprocessedImage == null || _detectionPlaceService == null)
                 {
                     _lblStatus.Text = "سرویس تشخیص در دسترس نیست";
                     _lblStatus.ForeColor = Color.Red;
@@ -500,7 +500,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 Log($"🎯 آستانه اعتماد: {_config.ConfidenceThreshold:F2}");
 
                 // بررسی وضعیت سرویس
-                if (_detectionService == null)
+                if (_detectionPlaceService == null)
                 {
                     _lblStatus.Text = "سرویس تشخیص مقداردهی نشده است";
                     _lblStatus.ForeColor = Color.Red;
@@ -510,7 +510,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
 
                 // Use real plate detection with configuration
                 Log("🔄 در حال اجرای مدل تشخیص...");
-                var result = await _detectionService.DetectAndAnnotateAsync(_originalImagePath!);
+                var result = await _detectionPlaceService.DetectAndAnnotateAsync(_originalImagePath!);
                 _detections = result.Detections;
                 
                 Log($"📊 مدل تشخیص اجرا شد - {_detections?.Count ?? 0} نتیجه");
@@ -614,7 +614,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 _lblStatus.Text = "در حال تشخیص متن...";
                 _lblStatus.ForeColor = Color.Orange;
                 
-                if (_correctedPlateImage == null || _ocrService == null)
+                if (_correctedPlateImage == null || _detectionOCRService == null)
                 {
                     _lblStatus.Text = "سرویس OCR در دسترس نیست";
                     _lblStatus.ForeColor = Color.Red;
@@ -633,7 +633,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 }
 
                 // Use real OCR with configuration
-                var ocrResult = _ocrService.RecognizePlate(new Bitmap(_correctedPlateImage));
+                var ocrResult = _detectionOCRService.RecognizePlate(new Bitmap(_correctedPlateImage));
                 
                 if (ocrResult != null && ocrResult.IsSuccessful)
                 {
@@ -1393,7 +1393,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
             {
                 Log("🧪 تست سرویس تشخیص...");
                 
-                if (_detectionService == null)
+                if (_detectionPlaceService == null)
                 {
                     Log("❌ سرویس تشخیص null است");
                     return;
@@ -1401,7 +1401,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 
                 // تست با یک تصویر ساده
                 var testImage = new Mat(640, 640, MatType.CV_8UC3, new Scalar(128, 128, 128));
-                var testDetections = _detectionService.DetectPlatesAsync(testImage).Result;
+                var testDetections = _detectionPlaceService.DetectPlatesAsync(testImage).Result;
                 
                 Log($"✅ تست سرویس موفق - {testDetections.Count} تشخیص");
                 
@@ -1419,7 +1419,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
             {
                 Log("🧪 تست سرویس OCR...");
                 
-                if (_ocrService == null)
+                if (_detectionOCRService == null)
                 {
                     Log("❌ سرویس OCR null است");
                     return;
@@ -1427,7 +1427,7 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 
                 // تست با یک تصویر پلاک نمونه
                 var testPlateImage = CreateTestPlateImage();
-                var ocrResult = _ocrService.RecognizePlate(testPlateImage);
+                var ocrResult = _detectionOCRService.RecognizePlate(testPlateImage);
                 
                 if (ocrResult != null)
                 {
@@ -1510,8 +1510,8 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                 _detectedPlateImage?.Dispose();
                 _croppedPlateImage?.Dispose();
                 _correctedPlateImage?.Dispose();
-                _detectionService?.Dispose();
-                _ocrService?.Dispose();
+                _detectionPlaceService?.Dispose();
+                _detectionOCRService?.Dispose();
             }
             base.Dispose(disposing);
         }

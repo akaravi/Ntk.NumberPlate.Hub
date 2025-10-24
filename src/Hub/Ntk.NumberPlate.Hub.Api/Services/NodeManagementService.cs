@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Ntk.NumberPlate.Hub.Api.Data;
 using Ntk.NumberPlate.Hub.Api.Models;
+using Ntk.NumberPlate.Shared.Models;
 
 namespace Ntk.NumberPlate.Hub.Api.Services;
 
@@ -21,7 +22,7 @@ public class NodeManagementService : INodeManagementService
 
         if (node == null)
         {
-            node = new NodeInfo
+            node = new Hub.Api.Models.NodeInfo
             {
                 NodeId = nodeId,
                 NodeName = nodeName,
@@ -55,7 +56,7 @@ public class NodeManagementService : INodeManagementService
         }
     }
 
-    public async Task<List<NodeInfo>> GetAllNodesAsync()
+    public async Task<List<Shared.Models.NodeInfo>> GetAllNodesAsync()
     {
         var nodes = await _context.Nodes.ToListAsync();
 
@@ -67,12 +68,30 @@ public class NodeManagementService : INodeManagementService
 
         await _context.SaveChangesAsync();
 
-        return nodes;
+        // تبدیل به مدل‌های Shared
+        return nodes.Select(n => new Shared.Models.NodeInfo
+        {
+            NodeId = n.NodeId,
+            NodeName = n.NodeName,
+            IpAddress = n.IpAddress,
+            IsOnline = n.IsOnline,
+            LastHeartbeat = n.LastHeartbeat
+        }).ToList();
     }
 
-    public async Task<NodeInfo?> GetNodeAsync(string nodeId)
+    public async Task<Shared.Models.NodeInfo?> GetNodeAsync(string nodeId)
     {
-        return await _context.Nodes.FindAsync(nodeId);
+        var node = await _context.Nodes.FindAsync(nodeId);
+        if (node == null) return null;
+
+        return new Shared.Models.NodeInfo
+        {
+            NodeId = node.NodeId,
+            NodeName = node.NodeName,
+            IpAddress = node.IpAddress,
+            IsOnline = node.IsOnline,
+            LastHeartbeat = node.LastHeartbeat
+        };
     }
 }
 

@@ -60,17 +60,17 @@ public class NodeController : ControllerBase
     /// دریافت لیست تمام نودها
     /// </summary>
     [HttpGet("list")]
-    public async Task<ActionResult<ApiResponse<List<NodeInfo>>>> GetAllNodes()
+    public async Task<ActionResult<ApiResponse<List<Shared.Models.NodeInfo>>>> GetAllNodes()
     {
         try
         {
             var nodes = await _nodeService.GetAllNodesAsync();
-            return Ok(ApiResponse<List<NodeInfo>>.SuccessResponse(nodes));
+            return Ok(ApiResponse<List<Shared.Models.NodeInfo>>.SuccessResponse(nodes));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت لیست نودها");
-            return StatusCode(500, ApiResponse<List<NodeInfo>>.ErrorResponse("خطا در دریافت لیست نودها"));
+            return StatusCode(500, ApiResponse<List<Shared.Models.NodeInfo>>.ErrorResponse("خطا در دریافت لیست نودها"));
         }
     }
 
@@ -78,20 +78,20 @@ public class NodeController : ControllerBase
     /// دریافت اطلاعات یک نود
     /// </summary>
     [HttpGet("{nodeId}")]
-    public async Task<ActionResult<ApiResponse<NodeInfo>>> GetNode(string nodeId)
+    public async Task<ActionResult<ApiResponse<Shared.Models.NodeInfo>>> GetNode(string nodeId)
     {
         try
         {
             var node = await _nodeService.GetNodeAsync(nodeId);
             if (node == null)
-                return NotFound(ApiResponse<NodeInfo>.ErrorResponse("نود یافت نشد"));
+                return NotFound(ApiResponse<Shared.Models.NodeInfo>.ErrorResponse("نود یافت نشد"));
 
-            return Ok(ApiResponse<NodeInfo>.SuccessResponse(node));
+            return Ok(ApiResponse<Shared.Models.NodeInfo>.SuccessResponse(node));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "خطا در دریافت اطلاعات نود");
-            return StatusCode(500, ApiResponse<NodeInfo>.ErrorResponse("خطا در دریافت اطلاعات نود"));
+            return StatusCode(500, ApiResponse<Shared.Models.NodeInfo>.ErrorResponse("خطا در دریافت اطلاعات نود"));
         }
     }
 }

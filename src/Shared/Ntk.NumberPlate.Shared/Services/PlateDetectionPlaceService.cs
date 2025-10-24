@@ -1,15 +1,20 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Linq;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using Ntk.NumberPlate.Shared.Models;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 
-namespace Ntk.NumberPlate.Node.ConfigApp.Services;
+namespace Ntk.NumberPlate.Shared.Services;
 
 /// <summary>
 /// سرویس تست تشخیص پلاک برای ConfigApp
 /// </summary>
-public class PlateDetectionTestService : IDisposable
+public class PlateDetectionPlaceService : IDisposable
 {
     private InferenceSession? _session;
     private string _inputName = "images";
@@ -18,7 +23,7 @@ public class PlateDetectionTestService : IDisposable
     private readonly string _modelPath;
     private readonly float _confidenceThreshold;
 
-    public PlateDetectionTestService(string modelPath, float confidenceThreshold)
+    public PlateDetectionPlaceService(string modelPath, float confidenceThreshold)
     {
         _modelPath = modelPath;
         _confidenceThreshold = confidenceThreshold;
@@ -419,4 +424,3 @@ public class PlateDetectionTestService : IDisposable
         _session?.Dispose();
     }
 }
-
