@@ -344,6 +344,30 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
             _rightPanel.Controls.Add(btnTestOcr);
             buttonY += 40;
 
+            // Process Image with Label Button
+            var btnProcessWithLabel = new Button
+            {
+                Text = "پردازش تصویر با Label",
+                Location = new System.Drawing.Point(10, buttonY),
+                Size = new System.Drawing.Size(buttonWidth, 35),
+                Font = new Font("Tahoma", 8, FontStyle.Bold),
+                BackColor = Color.FromArgb(100, 255, 100),
+                ForeColor = Color.White,
+                Enabled = true
+            };
+            btnProcessWithLabel.Click += (s, e) => {
+                if (_originalImage != null)
+                {
+                    ProcessImageWithLabel(_originalImage);
+                }
+                else
+                {
+                    Log("❌ ابتدا تصویر را بارگذاری کنید");
+                }
+            };
+            _rightPanel.Controls.Add(btnProcessWithLabel);
+            buttonY += 40;
+
             // Status Label
             _lblStatus = new Label
             {
@@ -1437,6 +1461,12 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
                     Log($"🔧 روش: {ocrResult.Method}");
                     Log($"📁 مدل OCR: {_config.YoloOcrModelPath}");
                     
+                    // نمایش تصویر پلاک با label
+                    if (!string.IsNullOrEmpty(ocrResult.Text) && ocrResult.Confidence > 0)
+                    {
+                        DisplayPlateWithLabel(testPlateImage, ocrResult.Text, ocrResult.Confidence);
+                    }
+                    
                     if (!string.IsNullOrEmpty(ocrResult.ErrorMessage))
                     {
                         Log($"⚠️ خطا: {ocrResult.ErrorMessage}");
@@ -1452,6 +1482,71 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
             catch (Exception ex)
             {
                 Log($"❌ خطا در تست OCR: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// پردازش تصویر اصلی و نمایش نتیجه با label
+        /// این متد تصویر اصلی را پردازش می‌کند و نتیجه را با label نمایش می‌دهد
+        /// </summary>
+        /// <param name="originalImage">تصویر اصلی</param>
+        private void ProcessImageWithLabel(Image originalImage)
+        {
+            try
+            {
+                Log("🔄 شروع پردازش تصویر با نمایش label...");
+                
+                if (_detectionPlaceService == null || _detectionOCRService == null)
+                {
+                    Log("❌ سرویس‌ها مقداردهی نشده‌اند");
+                    return;
+                }
+                
+                // تبدیل Image به Mat
+                using var bitmap = new Bitmap(originalImage);
+                using var mat = bitmap.ToMat();
+                
+                // تشخیص پلاک‌ها
+                var detections = _detectionPlaceService.DetectPlatesAsync(mat).Result;
+                
+                if (detections != null && detections.Count > 0)
+                {
+                    Log($"✅ {detections.Count} پلاک تشخیص داده شد");
+                    
+                    // پردازش اولین پلاک
+                    var firstDetection = detections[0];
+                    
+                    // برش پلاک از تصویر اصلی
+                    var plateBitmap = CropRealPlateArea(originalImage, firstDetection);
+                    if (plateBitmap != null)
+                    {
+                        // تشخیص متن پلاک
+                        var ocrResult = _detectionOCRService.RecognizePlate((Bitmap)plateBitmap);
+                        
+                        if (ocrResult != null && !string.IsNullOrEmpty(ocrResult.Text))
+                        {
+                            Log($"📝 متن تشخیص داده شده: {ocrResult.Text}");
+                            Log($"🎯 اعتماد: {ocrResult.Confidence:F2}");
+                            
+                            // نمایش تصویر پلاک با کاراکترهای تشخیص داده شده
+                            DisplayPlateWithCharacterLabels(plateBitmap, ocrResult);
+                        }
+                        else
+                        {
+                            Log("❌ تشخیص متن ناموفق");
+                        }
+                        
+                        plateBitmap.Dispose();
+                    }
+                }
+                else
+                {
+                    Log("❌ هیچ پلاکی تشخیص داده نشد");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ خطا در پردازش تصویر: {ex.Message}");
             }
         }
 
@@ -1498,6 +1593,328 @@ namespace Ntk.NumberPlate.Node.ConfigApp.Forms
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"خطا در Log: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// نمایش تصویر پلاک با label (متن تشخیص داده شده)
+        /// این متد تصویر پلاک را با متن تشخیص داده شده نمایش می‌دهد
+        /// </summary>
+        /// <param name="plateImage">تصویر پلاک</param>
+        /// <param name="detectedText">متن تشخیص داده شده</param>
+        /// <param name="confidence">درصد اعتماد</param>
+        private void DisplayPlateWithLabel(Image plateImage, string detectedText, float confidence)
+        {
+            try
+            {
+                Log($"🖼️ نمایش تصویر پلاک با label: {detectedText}");
+                
+                // ایجاد تصویر جدید با label
+                var labeledImage = CreateLabeledPlateImage(plateImage, detectedText, confidence);
+                
+                // نمایش در PictureBox
+                if (_picCorrectedPlate != null)
+                {
+                    _picCorrectedPlate.Image?.Dispose();
+                    _picCorrectedPlate.Image = labeledImage;
+                    _picCorrectedPlate.SizeMode = PictureBoxSizeMode.Zoom;
+                }
+                
+                // نمایش متن در TextBox
+                if (_txtOcrResult != null)
+                {
+                    _txtOcrResult.Text = $"متن تشخیص داده شده: {detectedText}\n" +
+                                       $"درصد اعتماد: {confidence:P1}\n" +
+                                       $"زمان تشخیص: {DateTime.Now:HH:mm:ss}";
+                }
+                
+                // نمایش نتیجه نهایی
+                if (_txtFinalResult != null)
+                {
+                    _txtFinalResult.Text = $"🎯 نتیجه نهایی:\n" +
+                                         $"📝 پلاک: {detectedText}\n" +
+                                         $"🎯 اعتماد: {confidence:P1}\n" +
+                                         $"✅ تشخیص موفق";
+                }
+                
+                Log($"✅ تصویر پلاک با label نمایش داده شد");
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ خطا در نمایش تصویر پلاک با label: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// نمایش تصویر پلاک با label و کاراکترهای تشخیص داده شده
+        /// این متد تصویر پلاک را با کاراکترهای تشخیص داده شده و موقعیت‌شان نمایش می‌دهد
+        /// </summary>
+        /// <param name="plateImage">تصویر پلاک</param>
+        /// <param name="ocrResult">نتیجه OCR شامل کاراکترها</param>
+        private void DisplayPlateWithCharacterLabels(Image plateImage, OcrResult ocrResult)
+        {
+            try
+            {
+                Log($"🖼️ نمایش تصویر پلاک با کاراکترهای تشخیص داده شده");
+                
+                // ایجاد تصویر جدید با label کاراکترها
+                var labeledImage = CreateCharacterLabeledPlateImage(plateImage, ocrResult);
+                
+                // نمایش در PictureBox
+                if (_picCorrectedPlate != null)
+                {
+                    _picCorrectedPlate.Image?.Dispose();
+                    _picCorrectedPlate.Image = labeledImage;
+                    _picCorrectedPlate.SizeMode = PictureBoxSizeMode.Zoom;
+                }
+                
+                // نمایش اطلاعات کاراکترها در TextBox
+                if (_txtOcrResult != null)
+                {
+                    var characterInfo = BuildCharacterInfoText(ocrResult);
+                    _txtOcrResult.Text = characterInfo;
+                }
+                
+                // نمایش نتیجه نهایی
+                if (_txtFinalResult != null)
+                {
+                    _txtFinalResult.Text = $"🎯 نتیجه نهایی:\n" +
+                                         $"📝 پلاک: {ocrResult.Text}\n" +
+                                         $"🎯 اعتماد: {ocrResult.Confidence:P1}\n" +
+                                         $"🔤 تعداد کاراکتر: {ocrResult.DetectedCharacters?.Count ?? 0}\n" +
+                                         $"✅ تشخیص موفق";
+                }
+                
+                Log($"✅ تصویر پلاک با کاراکترهای تشخیص داده شده نمایش داده شد");
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ خطا در نمایش تصویر پلاک با کاراکترها: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// ایجاد تصویر پلاک با label کاراکترها
+        /// این متد تصویر پلاک را با کاراکترهای تشخیص داده شده و موقعیت‌شان ترکیب می‌کند
+        /// </summary>
+        /// <param name="plateImage">تصویر پلاک</param>
+        /// <param name="ocrResult">نتیجه OCR شامل کاراکترها</param>
+        /// <returns>تصویر با label کاراکترها</returns>
+        private Image CreateCharacterLabeledPlateImage(Image plateImage, OcrResult ocrResult)
+        {
+            try
+            {
+                // ایجاد تصویر جدید
+                var labeledImage = new Bitmap(plateImage.Width, plateImage.Height);
+                
+                using (var graphics = Graphics.FromImage(labeledImage))
+                {
+                    // تنظیم کیفیت تصویر
+                    graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+                    
+                    // کپی تصویر اصلی
+                    graphics.DrawImage(plateImage, 0, 0, plateImage.Width, plateImage.Height);
+                    
+                    // رسم کاراکترهای تشخیص داده شده
+                    if (ocrResult.DetectedCharacters != null && ocrResult.DetectedCharacters.Count > 0)
+                    {
+                        DrawDetectedCharacters(graphics, ocrResult.DetectedCharacters);
+                    }
+                }
+                
+                return labeledImage;
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ خطا در ایجاد تصویر با کاراکترها: {ex.Message}");
+                return plateImage; // بازگشت تصویر اصلی در صورت خطا
+            }
+        }
+
+        /// <summary>
+        /// رسم کاراکترهای تشخیص داده شده روی تصویر
+        /// این متد کاراکترها را با موقعیت و دقت‌شان روی تصویر رسم می‌کند
+        /// </summary>
+        /// <param name="graphics">Graphics object</param>
+        /// <param name="characters">لیست کاراکترهای تشخیص داده شده</param>
+        private void DrawDetectedCharacters(Graphics graphics, List<DetectedCharacter> characters)
+        {
+            var colors = new Color[] { Color.Red, Color.Blue, Color.Green, Color.Orange, Color.Purple, Color.Cyan };
+            var colorIndex = 0;
+            
+            foreach (var character in characters)
+            {
+                var color = colors[colorIndex % colors.Length];
+                colorIndex++;
+                
+                // رسم bounding box
+                var pen = new Pen(color, 2);
+                var rect = new Rectangle(
+                    character.BoundingBox.X,
+                    character.BoundingBox.Y,
+                    character.BoundingBox.Width,
+                    character.BoundingBox.Height
+                );
+                graphics.DrawRectangle(pen, rect);
+                
+                // رسم label کاراکتر
+                var labelText = $"{character.Character} ({character.Confidence:P0})";
+                var font = new Font("Tahoma", 10, FontStyle.Bold);
+                var brush = new SolidBrush(color);
+                
+                // موقعیت label (بالای bounding box)
+                var labelY = Math.Max(0, character.BoundingBox.Y - 20);
+                var labelX = character.BoundingBox.X;
+                
+                // رسم پس‌زمینه label
+                var labelSize = graphics.MeasureString(labelText, font);
+                var labelRect = new Rectangle(
+                    labelX - 2,
+                    labelY - 2,
+                    (int)labelSize.Width + 4,
+                    (int)labelSize.Height + 4
+                );
+                
+                var labelBrush = new SolidBrush(Color.FromArgb(200, Color.White));
+                graphics.FillRectangle(labelBrush, labelRect);
+                
+                // رسم متن label
+                graphics.DrawString(labelText, font, brush, labelX, labelY);
+                
+                // آزادسازی منابع
+                pen.Dispose();
+                font.Dispose();
+                brush.Dispose();
+                labelBrush.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// ساخت متن اطلاعات کاراکترها
+        /// این متد اطلاعات کاراکترهای تشخیص داده شده را به صورت متن فرمت می‌کند
+        /// </summary>
+        /// <param name="ocrResult">نتیجه OCR</param>
+        /// <returns>متن اطلاعات کاراکترها</returns>
+        private string BuildCharacterInfoText(OcrResult ocrResult)
+        {
+            var info = new System.Text.StringBuilder();
+            
+            info.AppendLine($"📝 متن تشخیص داده شده: {ocrResult.Text}");
+            info.AppendLine($"🎯 اعتماد کل: {ocrResult.Confidence:P1}");
+            info.AppendLine($"⏱️ زمان تشخیص: {DateTime.Now:HH:mm:ss}");
+            info.AppendLine($"🔤 تعداد کاراکتر: {ocrResult.DetectedCharacters?.Count ?? 0}");
+            info.AppendLine();
+            
+            if (ocrResult.DetectedCharacters != null && ocrResult.DetectedCharacters.Count > 0)
+            {
+                info.AppendLine("🔍 جزئیات کاراکترها:");
+                info.AppendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                
+                foreach (var character in ocrResult.DetectedCharacters)
+                {
+                    var typeText = GetCharacterTypeText(character.Type);
+                    info.AppendLine($"📍 کاراکتر {character.Order + 1}: '{character.Character}'");
+                    info.AppendLine($"   🎯 اعتماد: {character.Confidence:P1}");
+                    info.AppendLine($"   📦 موقعیت: ({character.BoundingBox.X}, {character.BoundingBox.Y})");
+                    info.AppendLine($"   📏 اندازه: {character.BoundingBox.Width}x{character.BoundingBox.Height}");
+                    info.AppendLine($"   🏷️ نوع: {typeText}");
+                    info.AppendLine();
+                }
+            }
+            
+            return info.ToString();
+        }
+
+        /// <summary>
+        /// دریافت متن نوع کاراکتر
+        /// این متد نوع کاراکتر را به صورت متن فارسی برمی‌گرداند
+        /// </summary>
+        /// <param name="type">نوع کاراکتر</param>
+        /// <returns>متن نوع کاراکتر</returns>
+        private string GetCharacterTypeText(CharacterType type)
+        {
+            return type switch
+            {
+                CharacterType.Letter => "حرف",
+                CharacterType.Number => "عدد",
+                CharacterType.Symbol => "نماد",
+                CharacterType.Unknown => "نامشخص",
+                _ => "نامشخص"
+            };
+        }
+
+        /// <summary>
+        /// ایجاد تصویر پلاک با label
+        /// این متد تصویر پلاک را با متن تشخیص داده شده ترکیب می‌کند
+        /// </summary>
+        /// <param name="plateImage">تصویر پلاک</param>
+        /// <param name="detectedText">متن تشخیص داده شده</param>
+        /// <param name="confidence">درصد اعتماد</param>
+        /// <returns>تصویر با label</returns>
+        private Image CreateLabeledPlateImage(Image plateImage, string detectedText, float confidence)
+        {
+            try
+            {
+                // ایجاد تصویر جدید با اندازه بزرگتر برای label
+                var labeledImage = new Bitmap(plateImage.Width, plateImage.Height + 60);
+                
+                using (var graphics = Graphics.FromImage(labeledImage))
+                {
+                    // تنظیم کیفیت تصویر
+                    graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+                    
+                    // کپی تصویر اصلی
+                    graphics.DrawImage(plateImage, 0, 0, plateImage.Width, plateImage.Height);
+                    
+                    // ایجاد براش و قلم برای label
+                    var labelBrush = new SolidBrush(Color.White);
+                    var backgroundBrush = new SolidBrush(Color.FromArgb(200, 0, 0, 0));
+                    var font = new Font("Tahoma", 14, FontStyle.Bold);
+                    var smallFont = new Font("Tahoma", 10, FontStyle.Regular);
+                    
+                    // محاسبه اندازه متن
+                    var textSize = graphics.MeasureString(detectedText, font);
+                    var confidenceText = $"اعتماد: {confidence:P1}";
+                    var confidenceSize = graphics.MeasureString(confidenceText, smallFont);
+                    
+                    // محاسبه موقعیت label
+                    var labelX = (plateImage.Width - textSize.Width) / 2;
+                    var labelY = plateImage.Height + 5;
+                    var labelWidth = Math.Max(textSize.Width, confidenceSize.Width) + 20;
+                    var labelHeight = textSize.Height + confidenceSize.Height + 15;
+                    
+                    // رسم پس‌زمینه label
+                    var labelRect = new Rectangle((int)labelX - 10, (int)labelY - 5, (int)labelWidth, (int)labelHeight);
+                    graphics.FillRectangle(backgroundBrush, labelRect);
+                    
+                    // رسم متن اصلی
+                    graphics.DrawString(detectedText, font, labelBrush, labelX, labelY);
+                    
+                    // رسم درصد اعتماد
+                    var confidenceY = labelY + textSize.Height + 5;
+                    graphics.DrawString(confidenceText, smallFont, labelBrush, 
+                        labelX + (labelWidth - confidenceSize.Width) / 2, confidenceY);
+                    
+                    // رسم border
+                    var pen = new Pen(Color.White, 2);
+                    graphics.DrawRectangle(pen, labelRect);
+                    
+                    // آزادسازی منابع
+                    labelBrush.Dispose();
+                    backgroundBrush.Dispose();
+                    font.Dispose();
+                    smallFont.Dispose();
+                    pen.Dispose();
+                }
+                
+                return labeledImage;
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ خطا در ایجاد تصویر با label: {ex.Message}");
+                return plateImage; // بازگشت تصویر اصلی در صورت خطا
             }
         }
 

@@ -114,12 +114,16 @@ public class YoloOcrEngine : IOcrEngine
                 ? detections.Average(d => d.Confidence)
                 : 0f;
 
+            // تبدیل detections به DetectedCharacter
+            var detectedCharacters = ConvertToDetectedCharacters(detections);
+
             return new OcrResult
             {
                 Text = text,
                 Confidence = confidence,
                 IsSuccessful = !string.IsNullOrEmpty(text),
                 Method = Method,
+                DetectedCharacters = detectedCharacters,
                 AdditionalData = new Dictionary<string, object>
                 {
                     { "DetectionCount", detections.Count },
@@ -283,6 +287,70 @@ public class YoloOcrEngine : IOcrEngine
 
         _disposed = true;
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// تبدیل detections به DetectedCharacter
+    /// این متد اطلاعات تشخیص کاراکترها را به فرمت استاندارد تبدیل می‌کند
+    /// </summary>
+    /// <param name="detections">لیست تشخیص‌های خام</param>
+    /// <returns>لیست کاراکترهای تشخیص داده شده</returns>
+    private List<DetectedCharacter> ConvertToDetectedCharacters(List<CharacterDetection> detections)
+    {
+        var result = new List<DetectedCharacter>();
+        
+        // مرتب‌سازی بر اساس موقعیت X (از چپ به راست)
+        var sortedDetections = detections
+            .OrderBy(d => d.X)
+            .ToList();
+
+        for (int i = 0; i < sortedDetections.Count; i++)
+        {
+            var detection = sortedDetections[i];
+            
+            // تعیین نوع کاراکتر
+            var characterType = DetermineCharacterType(detection.Character);
+            
+            result.Add(new DetectedCharacter
+            {
+                Character = detection.Character,
+                Confidence = detection.Confidence,
+                BoundingBox = new BoundingBox
+                {
+                    X = detection.X,
+                    Y = detection.Y,
+                    Width = detection.Width,
+                    Height = detection.Height
+                },
+                Type = characterType,
+                Order = i
+            });
+        }
+        
+        return result;
+    }
+
+    /// <summary>
+    /// تعیین نوع کاراکتر
+    /// این متد نوع کاراکتر را بر اساس محتوای آن تشخیص می‌دهد
+    /// </summary>
+    /// <param name="character">کاراکتر</param>
+    /// <returns>نوع کاراکتر</returns>
+    private CharacterType DetermineCharacterType(string character)
+    {
+        if (string.IsNullOrEmpty(character))
+            return CharacterType.Unknown;
+
+        var c = character[0];
+        
+        if (char.IsLetter(c))
+            return CharacterType.Letter;
+        else if (char.IsDigit(c))
+            return CharacterType.Number;
+        else if (char.IsSymbol(c) || char.IsPunctuation(c))
+            return CharacterType.Symbol;
+        else
+            return CharacterType.Unknown;
     }
 
     /// <summary>
