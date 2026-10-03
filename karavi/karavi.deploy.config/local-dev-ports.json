@@ -1,0 +1,18 @@
+{
+  "projectId": "Ntk.NumberPlate.Hub",
+  "portRange": {
+    "min": 51830,
+    "max": 51839
+  },
+  "hosts": {
+    "hubApi": {
+      "httpPort": 51830,
+      "httpsPort": 51831,
+      "baseUrl": "https://localhost:51831",
+      "note": "Ntk.NumberPlate.Hub.Api"
+    }
+  },
+  "notes": {
+    "portRange": "All application local-dev ports allocated in 51830-51839 (canonical range for this project; main Ntk.NumberPlate shares 518xx family)"
+  }
+}
